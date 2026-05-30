@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #090b0f;
+  --bg2: #0f1219;
+  --bg3: #161c27;
+  --bg4: #1d2535;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #e1e8f4;
+  --text2: #7f8ea4;
+  --text3: #3e4d62;
+  --green: #4ade80;
+  --red: #f87171;
+  --blue: #60a5fa;
+  --amber: #fbbf24;
+  --teal: #2dd4bf;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Noto Sans TC', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: var(--sans); background: var(--bg); color: var(--text); }
+#root { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+
+/* Animations */
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)} }
+@keyframes slideUp { from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1} }
+@keyframes flashGreen { 0%{background:rgba(74,222,128,.2)}100%{background:transparent} }
+@keyframes flashRed { 0%{background:rgba(248,113,113,.2)}100%{background:transparent} }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.animate-fade { animation: fadeIn .3s ease both; }
+.flash-green { animation: flashGreen .6s ease; }
+.flash-red { animation: flashRed .6s ease; }
+
+/* Number font */
+.mono { font-family: var(--mono); }
+
+/* Price colors */
+.up { color: var(--green); }
+.down { color: var(--red); }
+.neutral { color: var(--text); }
+
+/* Modal backdrop */
+.modal-open { overflow: hidden; }
