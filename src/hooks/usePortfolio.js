@@ -101,11 +101,11 @@ export function usePortfolio() {
 
   const loadOrders = useCallback(async (settingsRow = null) => {
     const [ordersRes, settingsRes] = await Promise.all([
-      supabase.from('orders').select('*').eq('status', 'executed').order('created_at', { ascending: true }),
-      settingsRow
-        ? Promise.resolve({ data: [settingsRow] })
-        : supabase.from('settings').select('*').eq('key', 'portfolio').single().catch(() => ({ data: null }))
-    ])
+  supabase.from('orders').select('*').eq('status', 'executed').order('created_at', { ascending: true }),
+  settingsRow
+    ? Promise.resolve({ data: [settingsRow] })
+    : supabase.from('settings').select('*').eq('key', 'portfolio').single() 
+])
 
     const initialCash = settingsRes?.data?.value?.initialCash || DEFAULT_CASH
     const state = mkState(initialCash)
