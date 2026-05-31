@@ -69,7 +69,7 @@ export default function ChartModal({ symbol, security, onClose, onSelectForTrade
     chart.timeScale().fitContent()
     setLoading(false)
 
-    // Resize observer
+
     const ro = new ResizeObserver(() => {
       if (chart && container) chart.applyOptions({ width: container.clientWidth, height: container.clientHeight })
     })
@@ -119,10 +119,10 @@ export default function ChartModal({ symbol, security, onClose, onSelectForTrade
         flexDirection: 'column',
         animation: 'slideUp .25s ease',
       }}>
-        {/* Handle */}
+
         <div style={{ width: 40, height: 5, background: '#1d2535', borderRadius: 3, margin: '10px auto 0' }} />
 
-        {/* Header */}
+
         <div style={{
           padding: '14px 16px 12px',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -153,7 +153,6 @@ export default function ChartModal({ symbol, security, onClose, onSelectForTrade
           >✕</button>
         </div>
 
-        {/* TF Bar */}
         <div style={{
           display: 'flex', gap: 6, padding: '10px 16px 8px',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
@@ -180,7 +179,6 @@ export default function ChartModal({ symbol, security, onClose, onSelectForTrade
           ))}
         </div>
 
-        {/* Chart */}
         <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
           {loading && (
             <div style={{
@@ -201,7 +199,6 @@ export default function ChartModal({ symbol, security, onClose, onSelectForTrade
           <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
         </div>
 
-        {/* Footer */}
         <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ display: 'flex', gap: 10 }}>
             <button

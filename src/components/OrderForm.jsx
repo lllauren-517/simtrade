@@ -10,7 +10,6 @@ export default function OrderForm({ securities, portfolio, onPlaceOrder, prefill
   const [comment, setComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Prefill from chart modal
   useEffect(() => {
     if (prefillSymbol) {
       setSymbol(prefillSymbol)
@@ -100,7 +99,6 @@ export default function OrderForm({ securities, portfolio, onPlaceOrder, prefill
         ))}
       </div>
 
-      {/* Symbol selector */}
       <InputField label="選擇商品">
         <select
           value={symbol}
@@ -153,7 +151,6 @@ export default function OrderForm({ securities, portfolio, onPlaceOrder, prefill
         />
       </InputField>
 
-      {/* Price info */}
       {sec && amount > 0 && (
         <div style={{
           background: '#0f1219',
@@ -176,24 +173,22 @@ export default function OrderForm({ securities, portfolio, onPlaceOrder, prefill
         </div>
       )}
 
-      {/* Comment */}
       <InputField label="交易備註（選填）">
         <input
           type="text"
           value={comment}
           onChange={e => setComment(e.target.value)}
-          placeholder="例如：長期持有、技術突破..."
+          placeholder=""
           style={inputStyle}
         />
       </InputField>
 
-      {/* Cash info */}
+
       <div style={{ fontSize: 13, color: '#7f8ea4', marginBottom: 14, display: 'flex', justifyContent: 'space-between' }}>
         <span>可用現金</span>
         <span style={{ fontFamily: 'IBM Plex Mono', color: '#e1e8f4' }}>{money(portfolio.cash)}</span>
       </div>
 
-      {/* Submit */}
       <button
         onClick={handleSubmit}
         disabled={submitting}

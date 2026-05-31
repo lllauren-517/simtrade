@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { money, pct, fmt, cleanSym } from '../lib/utils'
+import { usePortfolioContext } from '../context/PortfolioContext'
 
 function StatCard({ label, value, color, sub }) {
   return (
@@ -26,7 +27,10 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-export default function RecordsPage({ portfolio, securities, calcNav, calcUnrealized, calcRealized }) {
+export default function RecordsPage() {
+  // 從 Context 全域獲取核心資料與結算函式
+  const { portfolio, securities, calcNav, calcUnrealized, calcRealized } = usePortfolioContext()
+
   const nav = calcNav()
   const unrealized = calcUnrealized()
   const realized = calcRealized()
@@ -119,7 +123,7 @@ export default function RecordsPage({ portfolio, securities, calcNav, calcUnreal
   return (
     <div style={{ padding: '12px 12px 32px', maxWidth: 1000, margin: '0 auto' }}>
 
-      {/* Key stats */}
+      {/* 數據看板 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
         <StatCard label="累計總損益" value={money(totalPnl)} color={totalPnl >= 0 ? '#4ade80' : '#f87171'} sub={pct(retPct)} />
         <StatCard label="最大回撤" value={maxDD.toFixed(2) + '%'} color={maxDD > 10 ? '#f87171' : maxDD > 5 ? '#fbbf24' : '#4ade80'} />
@@ -129,7 +133,7 @@ export default function RecordsPage({ portfolio, securities, calcNav, calcUnreal
         {winRate != null && <StatCard label="勝率（賣出）" value={winRate.toFixed(1) + '%'} color={winRate >= 50 ? '#4ade80' : '#f87171'} />}
       </div>
 
-      {/* NAV chart */}
+      {/* 走勢圖 */}
       {navChartData.length > 1 && (
         <Card title="資產報酬走勢">
           <div style={{ padding: '12px 0 8px', height: 220 }}>
@@ -147,7 +151,7 @@ export default function RecordsPage({ portfolio, securities, calcNav, calcUnreal
         </Card>
       )}
 
-      {/* Trade history */}
+      {/* 交易紀錄列表 */}
       <Card title={`交易紀錄 (${portfolio.orders.length} 筆)`}>
         {!portfolio.orders.length ? (
           <div style={{ padding: '32px 16px', textAlign: 'center', color: '#3e4d62', fontSize: 14 }}>尚無交易紀錄</div>
