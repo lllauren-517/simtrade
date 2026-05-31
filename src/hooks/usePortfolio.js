@@ -196,10 +196,16 @@ export function usePortfolio() {
     return order
   }, [loadOrders])
 
-  const updateInitialCash = useCallback(async (amount) => {
-    await supabase.from('settings').upsert([{ key: 'portfolio', value: { initialCash: amount } }], { onConflict: 'key' }).catch(() => {})
-    await loadOrders()
-  }, [loadOrders])
+ const updateInitialCash = useCallback(async (amount) => {
+ 
+  const { error } = await supabase.from('settings')
+    .upsert([{ key: 'portfolio', value: { initialCash: amount } }], { onConflict: 'key' })
+  
+ 
+  if (error) throw new Error(error.message)
+  
+  await loadOrders()
+}, [loadOrders])
 
   const resetAll = useCallback(async () => {
     await supabase.from('orders').delete().neq('id', '___none___')
