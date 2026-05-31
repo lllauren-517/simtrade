@@ -1,126 +1,81 @@
-// ── Format helpers ────────────────────────────────
-export const money = n =>
-  n == null ? '—' : '$' + Math.round(n).toLocaleString('zh-TW')
+// ── 格式化 ──
+export const fmtNum  = n => n?.toLocaleString('zh-TW', { maximumFractionDigits: 0 }) ?? '—';
+export const fmtMoney = n => n == null ? '—' : '$' + fmtNum(Math.round(n));
+export const fmtPct  = (n, decimals = 2) =>
+  n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(decimals) + '%';
+export const fmtPrice = p => p == null ? '—' : p.toFixed(p < 100 ? 2 : 0);
+export const uid     = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+export const nowTime = () => new Date().toTimeString().slice(0, 8);
+export const todayISO = () => new Date().toISOString().slice(0, 10);
 
-export const pct = (n, digits = 2) =>
-  n == null ? '—' : (n >= 0 ? '+' : '') + Number(n).toFixed(digits) + '%'
-
-export const fmt = n => {
-  if (n == null || Number.isNaN(+n)) return '—'
-  const v = +n
-  return v >= 100
-    ? v.toFixed(2)
-    : v >= 10
-    ? v.toFixed(3)
-    : v.toFixed(4)
+// ── 投資組合計算 ──
+export function calcNAV(cash, positions, prices) {
+  const mv = positions.reduce((sum, p) => {
+    const price = prices[p.symbol]?.price ?? p.avgPrice;
+    return sum + price * p.qty;
+  }, 0);
+  return cash + mv;
 }
 
-export const nowTime = () =>
-  new Date().toTimeString().slice(0, 8)
-
-export const uid = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
-
-export const todayStr = () =>
-  new Date().toISOString().slice(0, 10)
-
-// ── Symbol helpers ────────────────────────────────
-export const cleanSym = sym =>
-  String(sym || '').replace('.TW', '').replace('.TWO', '')
-
-export const normalizeSym = raw => {
-  const v = String(raw || '').trim().toUpperCase()
-  if (!v) return ''
-  if (v.endsWith('.TW') || v.endsWith('.TWO')) return v
-  if (/^\d{4,6}[A-Z]?$/.test(v)) return v + '.TW'
-  return v
+export function calcMaxDrawdown(navHistory) {
+  let peak = 0, maxDD = 0;
+  for (const nav of navHistory) {
+    if (nav > peak) peak = nav;
+    const dd = peak > 0 ? (peak - nav) / peak * 100 : 0;
+    if (dd > maxDD) maxDD = dd;
+  }
+  return maxDD;
 }
 
-// ── Trading calendar ──────────────────────────────
-export const getTWN = () => {
-  const now = new Date()
-  return new Date(now.getTime() + (8 * 60 + now.getTimezoneOffset()) * 60000)
+export function calcSharpe(returns) {
+  if (returns.length < 2) return null;
+  const avg = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const std = Math.sqrt(returns.reduce((s, r) => s + (r - avg) ** 2, 0) / returns.length);
+  return std > 0 ? +(avg / std * Math.sqrt(252)).toFixed(2) : null;
 }
 
-export const isAfterClose = () => {
-  const t = getTWN()
-  return t.getHours() > 13 || (t.getHours() === 13 && t.getMinutes() >= 30)
+export function calcPnLColor(n) {
+  if (n > 0) return 'var(--green)';
+  if (n < 0) return 'var(--red)';
+  return 'var(--text)';
 }
 
-export const isWeekend = () => {
-  const d = getTWN().getDay()
-  return d === 0 || d === 6
-}
-
-export const nextTradingDay = baseDate => {
-  const d = new Date(baseDate)
-  d.setDate(d.getDate() + 1)
-  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1)
-  return d.toISOString().slice(0, 10)
-}
-
-export const settlementDate = () => {
-  const twn = getTWN()
-  if (isAfterClose()) return nextTradingDay(twn)
-  if (isWeekend()) return nextTradingDay(twn)
-  return twn.toISOString().slice(0, 10)
-}
-
-// ── Tax / fee ─────────────────────────────────────
-export const FEE_RATE = 0.001425 * 0.28   // 折扣後手續費
-export const TAX_RATE_ETF = 0.001
-export const TAX_RATE_STOCK = 0.003
-
-export const sellTaxRate = (sym, grp) => {
-  if (grp === 'stock') return TAX_RATE_STOCK
-  const clean = cleanSym(sym).toUpperCase()
-  return clean.endsWith('B') ? 0 : TAX_RATE_ETF
-}
-
-export const calcCosts = (amount, side, sym, grp) => {
-  const fee = Math.max(Math.round(amount * FEE_RATE), 20)
-  const tax = side === 'sell' ? Math.round(amount * sellTaxRate(sym, grp)) : 0
-  return { fee, tax, net: side === 'buy' ? amount + fee + tax : amount - fee - tax }
-}
-
-// ── Candle generation (fallback) ──────────────────
+// ── 模擬 K 線 ──
 function seededRand(seed) {
-  let s = seed
-  return () => {
-    s = Math.imul(48271, s) | 0
-    return (s & 0x7fffffff) / 0x7fffffff
-  }
+  let s = seed;
+  return () => { s = Math.imul(48271, s) | 0; return (s & 0x7fffffff) / 0x7fffffff; };
 }
-function strSeed(str) {
-  let h = 0
-  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0
-  return Math.abs(h) || 1
+function strToSeed(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+  return Math.abs(h) || 1;
 }
 
-export const generateCandles = (sym, price, tf = '1M') => {
-  const days = { '1W': 7, '1M': 30, '3M': 90, '6M': 180, '1Y': 365, '3Y': 1095 }[tf] || 30
-  const rand = seededRand(strSeed(sym + tf))
-  const vol = 0.015
-  let p = price
-  for (let i = 0; i < days; i++) p /= (1 + (rand() - 0.5) * vol * 2)
-  const data = []
-  const rand2 = seededRand(strSeed(sym + tf))
-  for (let i = days; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    if (d.getDay() === 0 || d.getDay() === 6) continue
-    const move = (rand2() - 0.48) * vol * 2
-    const o = p, c = p * (1 + move)
-    const h = Math.max(o, c) * (1 + rand2() * vol * 0.4)
-    const l = Math.min(o, c) * (1 - rand2() * vol * 0.4)
-    data.push({ time: d.toISOString().slice(0, 10), open: +o.toFixed(2), high: +h.toFixed(2), low: +l.toFixed(2), close: +c.toFixed(2) })
-    p = c
+export function generateCandles(symbol, currentPrice, vol, tfDays) {
+  const rand = seededRand(strToSeed(symbol + tfDays));
+  const dailyVol = vol / Math.sqrt(252);
+  let price = currentPrice;
+  // 往回推算起始價
+  for (let i = 0; i < tfDays; i++) price /= (1 + (rand() - 0.5) * dailyVol * 2);
+
+  const rand2 = seededRand(strToSeed(symbol + tfDays));
+  const candles = [];
+  for (let i = tfDays; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    if (d.getDay() === 0 || d.getDay() === 6) continue;
+    const move = (rand2() - 0.48) * dailyVol * 2;
+    const open = price, close = price * (1 + move);
+    const high = Math.max(open, close) * (1 + rand2() * dailyVol * 0.5);
+    const low  = Math.min(open, close) * (1 - rand2() * dailyVol * 0.5);
+    candles.push({ time: d.toISOString().slice(0, 10), open, high, low, close });
+    price = close;
   }
-  if (data.length) {
-    const last = data[data.length - 1]
-    last.close = +price.toFixed(2)
-    last.high = +(Math.max(last.high, price)).toFixed(2)
-    last.low = +(Math.min(last.low, price)).toFixed(2)
+  // 最後一根收盤 = 當前價
+  if (candles.length) {
+    const last = candles.at(-1);
+    last.close = currentPrice;
+    last.high  = Math.max(last.high, currentPrice);
+    last.low   = Math.min(last.low,  currentPrice);
   }
-  return data
+  return candles;
 }
