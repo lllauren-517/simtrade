@@ -4,8 +4,25 @@ import OrderForm from '../components/OrderForm'
 import Holdings from '../components/Holdings'
 import ChartModal from '../components/ChartModal'
 import { money, pct } from '../lib/utils'
+import { usePortfolioContext } from '../context/PortfolioContext'
 
-export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav, calcUnrealized }) {
+// Tailwind
+const MetricCard = ({ label, value, sub, color }) => (
+  <div className="bg-[#161c27] rounded-[10px] p-3 min-w-0">
+    <div className="text-xs text-[#3e4d62] mb-1 truncate">{label}</div>
+    <div 
+      className="mono text-[18px] font-semibold tracking-[-0.5px] whitespace-nowrap"
+      style={{ color: color || '#e1e8f4' }}
+    >
+      {value}
+    </div>
+    {sub && <div className="text-xs text-[#3e4d62] mt-1">{sub}</div>}
+  </div>
+)
+
+export default function TradePage() {
+  const { securities, portfolio, placeOrder, calcNav, calcUnrealized } = usePortfolioContext()
+  
   const [chartSym, setChartSym] = useState(null)
   const [prefillSymbol, setPrefillSymbol] = useState(null)
 
@@ -13,19 +30,6 @@ export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav
   const unrealized = calcUnrealized()
   const ret = portfolio.initialCash > 0 ? ((nav - portfolio.initialCash) / portfolio.initialCash) * 100 : 0
   const retClr = ret >= 0 ? '#4ade80' : '#f87171'
-
-  const MetricCard = ({ label, value, sub, color }) => (
-    <div style={{
-      background: '#161c27',
-      borderRadius: 10,
-      padding: '12px 12px',
-      minWidth: 0,
-    }}>
-      <div style={{ fontSize: 12, color: '#3e4d62', marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</div>
-      <div style={{ fontFamily: 'IBM Plex Mono', fontSize: 18, fontWeight: 600, color: color || '#e1e8f4', letterSpacing: -0.5, whiteSpace: 'nowrap' }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: '#3e4d62', marginTop: 4 }}>{sub}</div>}
-    </div>
-  )
 
   const SectionTitle = ({ title, count }) => (
     <div style={{
@@ -56,7 +60,6 @@ export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav
   return (
     <div style={{ padding: '12px 12px 32px', maxWidth: 1300, margin: '0 auto' }}>
 
-      {/* Summary metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
         <MetricCard label="總資產 (NAV)" value={money(nav)} color={retClr} sub={`${ret >= 0 ? '+' : ''}${ret.toFixed(2)}%`} />
         <MetricCard label="可用現金" value={money(portfolio.cash)} />
@@ -64,13 +67,8 @@ export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav
         <MetricCard label="持股數" value={`${portfolio.positions.length} 檔`} />
       </div>
 
-      {/* Desktop: 2 columns; Mobile: single column */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: window.innerWidth >= 900 ? '1fr 1fr' : '1fr',
-        gap: 12,
-      }}>
-        {/* Left: quotes + holdings */}
+      // RWD
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
           <Card>
             <SectionTitle title="商品報價" />
@@ -86,21 +84,18 @@ export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav
             <Holdings
               portfolio={portfolio}
               securities={securities}
-              onFillOrder={(sym, side) => {
-                setPrefillSymbol(sym)
-              }}
+              onFillOrder={(sym, side) => setPrefillSymbol(sym)}
             />
           </Card>
         </div>
 
-        {/* Right: order form */}
         <div>
           <Card>
             <SectionTitle title="下單" />
             <OrderForm
               securities={securities}
               portfolio={portfolio}
-              onPlaceOrder={onPlaceOrder}
+              onPlaceOrder={placeOrder}
               prefillSymbol={prefillSymbol}
               onPrefillUsed={() => setPrefillSymbol(null)}
             />
@@ -108,7 +103,6 @@ export default function TradePage({ securities, portfolio, onPlaceOrder, calcNav
         </div>
       </div>
 
-      {/* Chart modal */}
       {chartSym && (
         <ChartModal
           symbol={chartSym}

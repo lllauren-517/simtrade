@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { money } from '../lib/utils'
 import { toast } from '../components/Toast'
+import { usePortfolioContext } from '../context/PortfolioContext'
 
-export default function SettingsPage({ portfolio, onUpdateCash, onReset }) {
+export default function SettingsPage() {
+  const { portfolio, updateInitialCash: onUpdateCash, resetAll: onReset } = usePortfolioContext()
+  
   const [cashInput, setCashInput] = useState(portfolio.initialCash.toString())
   const [saving, setSaving] = useState(false)
 
@@ -56,7 +59,6 @@ export default function SettingsPage({ portfolio, onUpdateCash, onReset }) {
   return (
     <div style={{ padding: '12px 12px 32px', maxWidth: 600, margin: '0 auto' }}>
 
-      {/* Current summary */}
       <Card title="資產概況">
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
@@ -73,7 +75,7 @@ export default function SettingsPage({ portfolio, onUpdateCash, onReset }) {
         </div>
       </Card>
 
-      {/* Initial cash setting */}
+      //初始資金
       <Card title="調整初始資金">
         <div style={{ fontSize: 13, color: '#7f8ea4', marginBottom: 12, lineHeight: 1.6 }}>
           調整模擬交易的總資金。建議在無持股的狀態下修改。
@@ -88,7 +90,7 @@ export default function SettingsPage({ portfolio, onUpdateCash, onReset }) {
           style={inputStyle}
           placeholder="例如：1000000"
         />
-        {/* Presets */}
+
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10, marginBottom: 14 }}>
           {presets.map(v => (
             <button
@@ -127,20 +129,7 @@ export default function SettingsPage({ portfolio, onUpdateCash, onReset }) {
         >{saving ? '儲存中...' : '儲存設定'}</button>
       </Card>
 
-      {/* About */}
-      <Card title="關於 SimTrade">
-        <div style={{ fontSize: 13, color: '#7f8ea4', lineHeight: 1.8 }}>
-          <div style={{ marginBottom: 8, color: '#e1e8f4', fontWeight: 600 }}>SimTrade 模擬投資平台</div>
-          以模擬資金進行台股 ETF 和個股的虛擬交易練習。<br />
-          即時報價來自 Yahoo Finance，每 30 秒更新。<br />
-          交易費率：手續費 0.028%（折扣後），ETF 交易稅 0.1%，個股交易稅 0.3%。
-        </div>
-        <div style={{ marginTop: 12, fontSize: 12, color: '#3e4d62' }}>
-          免責聲明：本平台僅供練習，不構成任何投資建議。
-        </div>
-      </Card>
 
-      {/* Danger zone */}
       <Card title="危險操作">
         <div style={{ fontSize: 13, color: '#7f8ea4', marginBottom: 14, lineHeight: 1.5 }}>
           重置後所有交易紀錄將從資料庫刪除，且無法恢復。

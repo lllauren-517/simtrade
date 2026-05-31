@@ -2,32 +2,32 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, DEFAULT_SECURITIES, FALLBACK_PRICES } from '../lib/supabase'
 import { uid, nowTime, settlementDate, calcCosts, cleanSym } from '../lib/utils'
 
-const DEFAULT_CASH = 1_000_000   // 預設初始資金 100萬
+const DEFAULT_CASH = 1_000_000   
 
-// ── Build initial state ───────────────────────────
+
 const mkState = (initialCash = DEFAULT_CASH) => ({
   cash: initialCash,
   initialCash,
-  positions: [],   // [{ symbol, qty, avgPrice }]
-  orders: [],      // executed orders from DB
+  positions: [],  
+  orders: [],      
 })
 
 export function usePortfolio() {
-  // ── Core state ────────────────────────────────
+  
   const [securities, setSecurities] = useState({})
   const [portfolio, setPortfolio] = useState(mkState())
-  const [priceStatus, setPriceStatus] = useState('idle')   // idle | loading | live | error
+  const [priceStatus, setPriceStatus] = useState('idle')  
   const [lastUpdate, setLastUpdate] = useState(null)
   const [marketOpen, setMarketOpen] = useState(false)
 
-  // Keep a ref for up-to-date portfolio in callbacks
+ 
   const portfolioRef = useRef(portfolio)
   portfolioRef.current = portfolio
 
   const securitiesRef = useRef(securities)
   securitiesRef.current = securities
 
-  // ── Helpers ───────────────────────────────────
+ 
   const updateSecurity = useCallback((sym, patch) => {
     setSecurities(prev => ({
       ...prev,
@@ -35,7 +35,6 @@ export function usePortfolio() {
     }))
   }, [])
 
-  // ── Init securities from DB ───────────────────
   const fetchSecurities = useCallback(async () => {
     const { data } = await supabase.from('securities').select('*')
     const map = {}
@@ -67,7 +66,6 @@ export function usePortfolio() {
     setSecurities(map)
   }, [])
 
-  // ── Fetch live prices via edge function ───────
   const fetchPrices = useCallback(async () => {
     setPriceStatus('loading')
     const symbols = DEFAULT_SECURITIES.map(d => d.symbol)
@@ -101,7 +99,6 @@ export function usePortfolio() {
     }
   }, [])
 
-  // ── Load orders & rebuild portfolio ──────────
   const loadOrders = useCallback(async (settingsRow = null) => {
     const [ordersRes, settingsRes] = await Promise.all([
       supabase.from('orders').select('*').eq('status', 'executed').order('created_at', { ascending: true }),
@@ -132,7 +129,6 @@ export function usePortfolio() {
         status: o.status,
       }))
 
-      // Replay orders
       orders.forEach(o => {
         if (o.side === 'buy') {
           state.cash -= o.netAmount
@@ -157,7 +153,6 @@ export function usePortfolio() {
     setPortfolio(state)
   }, [])
 
-  // ── Place order ───────────────────────────────
   const placeOrder = useCallback(async ({ symbol, qty, side, comment }) => {
     const s = securitiesRef.current[symbol]
     if (!s) throw new Error('找不到商品')
@@ -201,19 +196,16 @@ export function usePortfolio() {
     return order
   }, [loadOrders])
 
-  // ── Update initial cash setting ───────────────
   const updateInitialCash = useCallback(async (amount) => {
     await supabase.from('settings').upsert([{ key: 'portfolio', value: { initialCash: amount } }], { onConflict: 'key' }).catch(() => {})
     await loadOrders()
   }, [loadOrders])
 
-  // ── Reset all ─────────────────────────────────
   const resetAll = useCallback(async () => {
     await supabase.from('orders').delete().neq('id', '___none___')
     await loadOrders()
   }, [loadOrders])
 
-  // ── Market open status ────────────────────────
   useEffect(() => {
     const check = () => {
       const now = new Date()
@@ -227,7 +219,6 @@ export function usePortfolio() {
     return () => clearInterval(t)
   }, [])
 
-  // ── Init & price polling ──────────────────────
   useEffect(() => {
     fetchSecurities().then(() => {
       loadOrders()
@@ -237,7 +228,6 @@ export function usePortfolio() {
     return () => clearInterval(t)
   }, [fetchSecurities, loadOrders, fetchPrices])
 
-  // ── Realtime subscription ─────────────────────
   useEffect(() => {
     const ch = supabase.channel('rt-orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadOrders())
@@ -245,7 +235,6 @@ export function usePortfolio() {
     return () => supabase.removeChannel(ch)
   }, [loadOrders])
 
-  // ── Derived calculations ──────────────────────
   const calcNav = useCallback(() => {
     const mv = portfolio.positions.reduce((sum, p) => {
       const s = securitiesRef.current[p.symbol]

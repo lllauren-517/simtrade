@@ -5,7 +5,6 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable__
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// ── 預設標的 ──────────────────────────────────────
 export const DEFAULT_SECURITIES = [
   { symbol: '0050.TW', name: '元大台灣50',        grp: 'etf',   type: 'ETF' },
   { symbol: '0056.TW', name: '元大高股息',         grp: 'etf',   type: 'ETF' },
@@ -19,7 +18,7 @@ export const DEFAULT_SECURITIES = [
   { symbol: '1101.TW',  name: '台泥',             grp: 'stock', type: 'EQUITY' },
 ]
 
-// ── 模擬基礎報價（沒抓到即用此值）────────────────
+// 模擬報價（沒抓到
 export const FALLBACK_PRICES = {
   '0050.TW':   { price: 182.5,  base: 181.0 },
   '0056.TW':   { price: 33.2,   base: 33.0  },
